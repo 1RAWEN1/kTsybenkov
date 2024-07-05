@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class OrderProduct {
     @Id
     @GeneratedValue
-    private long id;
+    private Long id;
 
     @ManyToOne
     private ClientOrder clientOrder;

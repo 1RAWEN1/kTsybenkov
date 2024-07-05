@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class Category {
     @Id
     @GeneratedValue
-    private long id;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;

@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class Client {
     @Id
     @GeneratedValue
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
     private long externalId;

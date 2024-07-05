@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class Product {
     @Id
     @GeneratedValue
-    private long id;
+    private Long id;
 
     @ManyToOne
     private Category category;
