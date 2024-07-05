@@ -15,36 +15,36 @@ public class Client {
     @Column(nullable = false)
     private String fullName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 15)
     private String phoneNumber;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 400)
     private String address;
 
     public Client() {
     }
 
-    public Client(long externalId, String fullName, String phoneNumber
-            , String address) {
+    public Client(long externalId, String fullName, String phoneNumber,
+                  String address) {
         this.externalId = externalId;
         this.fullName = fullName;
         this.phoneNumber = phoneNumber;
         this.address = address;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public long getExternalId() {
+    public Long getExternalId() {
         return externalId;
     }
 
-    public void setExternalId(long externalId) {
+    public void setExternalId(Long externalId) {
         this.externalId = externalId;
     }
 

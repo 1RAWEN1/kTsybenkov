@@ -3,7 +3,7 @@ package ru.ktsybenkov.tgBot.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "orderProducts")
+@Table(name = "order_products")
 public class OrderProduct {
     @Id
     @GeneratedValue
@@ -16,24 +16,16 @@ public class OrderProduct {
     private Product product;
 
     @Column(nullable = false)
-    private Long countProduct;
+    private Integer countProduct;
 
     public OrderProduct() {
     }
 
-    public OrderProduct(ClientOrder clientOrder, Product product
-            , Long countProduct) {
+    public OrderProduct(ClientOrder clientOrder, Product product,
+                        Integer countProduct) {
         this.clientOrder = clientOrder;
         this.product = product;
         this.countProduct = countProduct;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public ClientOrder getClientOrder() {
@@ -52,11 +44,19 @@ public class OrderProduct {
         this.product = product;
     }
 
-    public Long getCountProduct() {
+    public Integer getCountProduct() {
         return countProduct;
     }
 
-    public void setCountProduct(Long countProduct) {
+    public void setCountProduct(Integer countProduct) {
         this.countProduct = countProduct;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 }

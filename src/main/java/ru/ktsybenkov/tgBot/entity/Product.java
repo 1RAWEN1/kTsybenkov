@@ -2,6 +2,8 @@ package ru.ktsybenkov.tgBot.entity;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "products")
 public class Product {
@@ -12,31 +14,30 @@ public class Product {
     @ManyToOne
     private Category category;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 50)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 400)
     private String description;
 
-    @Column(nullable = false)
-    private Double price;
+    @Column(nullable = false, precision = 10,  scale = 2)
+    private BigDecimal price;
 
     public Product() {
     }
 
-    public Product(Category category, String name, String description
-            , double price) {
+    public Product(Category category, String name, String description, BigDecimal price) {
         this.category = category;
         this.name = name;
         this.description = description;
         this.price = price;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -64,11 +65,11 @@ public class Product {
         this.description = description;
     }
 
-    public double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 }
