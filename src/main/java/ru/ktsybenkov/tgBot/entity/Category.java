@@ -1,7 +1,6 @@
 package ru.ktsybenkov.tgBot.entity;
 
 import jakarta.persistence.*;
-import org.springframework.data.annotation.Id;
 
 @Entity
 @Table(name = "categories")
