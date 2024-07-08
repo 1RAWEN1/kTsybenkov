@@ -1,13 +1,10 @@
 package ru.ktsybenkov.tgBot;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.ktsybenkov.tgBot.dao.CategoryRepository;
-import ru.ktsybenkov.tgBot.dao.ProductRepository;
-import ru.ktsybenkov.tgBot.entity.Category;
-import ru.ktsybenkov.tgBot.entity.Product;
+import ru.ktsybenkov.tgBot.dao.*;
+import ru.ktsybenkov.tgBot.entity.*;
 
 import java.math.BigDecimal;
 
@@ -19,9 +16,23 @@ public class FillingTests {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private ClientRepository clientRepository;
+
+    @Autowired
+    private ClientOrderRepository clientOrderRepository;
+
+    @Autowired
+    private OrderProductRepository orderProductRepository;
+
     @Test
-    @BeforeAll
     void createRecords(){
+        orderProductRepository.deleteAll();
+        productRepository.deleteAll();
+        categoryRepository.deleteAll();
+        clientOrderRepository.deleteAll();
+        clientRepository.deleteAll();
+
         //Создание категорий
         Category pizzaCategory = new Category("Пицца", null);
         Category rollCategory = new Category("Роллы", null);
@@ -197,13 +208,13 @@ public class FillingTests {
         productRepository.save(veganBurger);
 
         //Острые бургеры
-        Product spicyGamBurger = new Product(spicyBurgerCategory, "Гамбургер",
+        Product spicyGamBurger = new Product(spicyBurgerCategory, "Острый Гамбургер",
                 "булка, рубленая говяжья котлета, кружочки помидора," +
                 " маринованного огурца, отсрый соус", new BigDecimal(179));
-        Product spicyCheeseBurger = new Product(spicyBurgerCategory, "Чизбургер",
+        Product spicyCheeseBurger = new Product(spicyBurgerCategory, "Острый Чизбургер",
                 "булка, ломтик твердого сыра, говяжья котлета," +
                 " колечко репчатого лука, острый соус", new BigDecimal(229));
-        Product spicyFishBurger = new Product(spicyBurgerCategory, "Фишбургер",
+        Product spicyFishBurger = new Product(spicyBurgerCategory, "Острый Фишбургер",
                 "булка, рыбная котлета или рыбное филе, острый соус",
                 new BigDecimal(179));
 
@@ -266,5 +277,39 @@ public class FillingTests {
         productRepository.save(buckwheatTea);
         productRepository.save(barleyTea);
         productRepository.save(riceTea);
+
+        Client petr = new Client(1056L, "Петр Петрович Петров",
+                "9787505664", "Адрес1");
+
+        Client ivan = new Client(1056L, "Иван Иванович Иванов",
+                "9787558964", "Адрес2");
+
+        clientRepository.save(petr);
+        clientRepository.save(ivan);
+
+        ClientOrder petrOrder = new ClientOrder(petr, 1,
+                BigDecimal.valueOf(barleyTea.getPrice().doubleValue() * 2));
+        ClientOrder petrOrder2 = new ClientOrder(petr, 3,
+                BigDecimal.valueOf(pizzaPomodoro.getPrice().doubleValue()));
+        ClientOrder ivanOrder = new ClientOrder(ivan, 5,
+                BigDecimal.valueOf(orangeJuice.getPrice().doubleValue()));
+
+        clientOrderRepository.save(petrOrder);
+        clientOrderRepository.save(petrOrder2);
+        clientOrderRepository.save(ivanOrder);
+
+        OrderProduct orderProduct = new OrderProduct(petrOrder,
+                barleyTea, 2);
+        OrderProduct orderProduct3 = new OrderProduct(petrOrder,
+                barleyTea, 2);
+        OrderProduct orderProduct1 = new OrderProduct(petrOrder2,
+                pizzaPomodoro, 1);
+        OrderProduct orderProduct2 = new OrderProduct(petrOrder2,
+                orangeJuice, 3);
+
+        orderProductRepository.save(orderProduct);
+        orderProductRepository.save(orderProduct1);
+        orderProductRepository.save(orderProduct2);
+        orderProductRepository.save(orderProduct3);
     }
 }
