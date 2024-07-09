@@ -18,12 +18,9 @@ public class ProductController {
     @GetMapping(value = "search", produces = "application/json; charset=UTF-8")
     public List<Product> getProductsOfCategory(
             @RequestParam(name = "categoryId", required = false) Long categoryId,
-            @RequestParam(name = "name", required = false) String partialName
+            @RequestParam(name = "name", required = false) String searchNameString
     ){
-        if(categoryId != null)
-            return productService.getProductsOfCategory(categoryId);
-        else
-            return productService.partialNameSearch(partialName);
+        return productService.search(searchNameString, categoryId);
     }
 
     @GetMapping("popular")

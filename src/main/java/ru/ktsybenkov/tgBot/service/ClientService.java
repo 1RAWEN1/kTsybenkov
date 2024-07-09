@@ -8,11 +8,9 @@ import ru.ktsybenkov.tgBot.dao.ClientRepository;
 import ru.ktsybenkov.tgBot.dao.OrderProductRepository;
 import ru.ktsybenkov.tgBot.entity.Client;
 import ru.ktsybenkov.tgBot.entity.ClientOrder;
-import ru.ktsybenkov.tgBot.entity.OrderProduct;
 import ru.ktsybenkov.tgBot.entity.Product;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -27,28 +25,14 @@ public class ClientService {
     private ClientRepository clientRepository;
 
     public List<ClientOrder> getClientOrders(Long clientId){
-        return clientOrderRepository.findAll().stream()
-                .filter(
-                        clientOrder -> clientOrder.getClient().getId().equals(clientId)
-                )
-                .collect(Collectors.toList());
+        return clientOrderRepository.findByClientId(clientId);
     }
 
     public List<Product> getClientsOrderedProducts(Long clientId){
-        return orderProductRepository.findAll().stream()
-                .filter(
-                        order -> order.getClientOrder().getClient().getId().equals(clientId)
-                )
-                .map(OrderProduct::getProduct)
-                .distinct()
-                .collect(Collectors.toList());
+        return orderProductRepository.findProductByClientOrderId(clientId);
     }
 
-    public List<Client> partialNameSearch(String partialName){
-        return clientRepository.findAll().stream()
-                .filter(
-                        client -> client.getFullName().contains(partialName)
-                )
-                .collect(Collectors.toList());
+    public List<Client> search(String searchNameString){
+        return clientRepository.search(searchNameString);
     }
 }

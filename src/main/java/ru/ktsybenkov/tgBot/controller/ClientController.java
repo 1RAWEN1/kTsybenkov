@@ -22,13 +22,13 @@ public class ClientController {
         return clientService.getClientOrders(clientId);
     }
 
-    @GetMapping("/{id}/products")
+    @GetMapping("{id}/products")
     public List<Product> getClientOrderedProducts(@PathVariable(name = "id") Long clientId){
         return clientService.getClientsOrderedProducts(clientId);
     }
 
     @GetMapping(value = "search", produces = "application/json; charset=UTF-8")
-    public List<Client> partialNameSearch(@RequestParam(name = "name") String partialName){
-        return clientService.partialNameSearch(partialName);
+    public List<Client> search(@RequestParam(name = "name") String searchNameString){
+        return clientService.search(searchNameString);
     }
 }
