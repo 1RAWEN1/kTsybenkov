@@ -21,8 +21,7 @@ public class OrderProduct {
     public OrderProduct() {
     }
 
-    public OrderProduct(ClientOrder clientOrder, Product product,
-                        Integer countProduct) {
+    public OrderProduct(ClientOrder clientOrder, Product product, Integer countProduct) {
         this.clientOrder = clientOrder;
         this.product = product;
         this.countProduct = countProduct;

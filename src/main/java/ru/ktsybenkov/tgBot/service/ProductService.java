@@ -40,9 +40,8 @@ public class ProductService {
                 productCount.increaseCount(orderProduct.getCountProduct());
             }
             else{
-                productCounts.put(orderProduct.getProduct(),
-                        new ProductCount(orderProduct.getProduct(),
-                                orderProduct.getCountProduct()));
+                productCounts.put(orderProduct.getProduct(), new ProductCount(orderProduct.getProduct(),
+                        orderProduct.getCountProduct()));
             }
         }
 

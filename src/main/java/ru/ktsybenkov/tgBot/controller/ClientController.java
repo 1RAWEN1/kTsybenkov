@@ -27,11 +27,8 @@ public class ClientController {
         return clientService.getClientsOrderedProducts(clientId);
     }
 
-    @GetMapping(value = "search",
-            produces = "application/json; charset=UTF-8")
-    public List<Client> partialNameSearch(
-            @RequestParam(name = "name") String partialName
-    ){
+    @GetMapping(value = "search", produces = "application/json; charset=UTF-8")
+    public List<Client> partialNameSearch(@RequestParam(name = "name") String partialName){
         return clientService.partialNameSearch(partialName);
     }
 }

@@ -15,8 +15,7 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @GetMapping(value = "search",
-            produces = "application/json; charset=UTF-8")
+    @GetMapping(value = "search", produces = "application/json; charset=UTF-8")
     public List<Product> getProductsOfCategory(
             @RequestParam(name = "categoryId", required = false) Long categoryId,
             @RequestParam(name = "name", required = false) String partialName
@@ -28,9 +27,7 @@ public class ProductController {
     }
 
     @GetMapping("popular")
-    public List<Product> getMostPopularProducts(
-            @RequestParam(name = "limit") Long topLimit
-    ){
+    public List<Product> getMostPopularProducts(@RequestParam(name = "limit") Long topLimit){
         return productService.getMostPopularProducts(topLimit);
     }
 }
