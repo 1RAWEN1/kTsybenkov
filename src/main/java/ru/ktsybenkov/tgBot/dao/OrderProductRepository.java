@@ -10,6 +10,7 @@ import java.util.List;
 
 @RepositoryRestResource(collectionResourceRel = "orderProducts", path = "orderProducts")
 public interface OrderProductRepository extends JpaRepository<OrderProduct, Long> {
-    @Query("select distinct op.product from OrderProduct op, ClientOrder co where co = op.clientOrder and co.client.id = :clientOrderId")
+    @Query("select distinct op.product from OrderProduct op, ClientOrder co " +
+            "where co = op.clientOrder and co.client.id = :clientOrderId")
     List<Product> findProductByClientOrderId(Long clientOrderId);
 }

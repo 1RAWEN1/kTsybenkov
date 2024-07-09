@@ -9,6 +9,7 @@ import java.util.List;
 
 @RepositoryRestResource(collectionResourceRel = "clients", path = "clients")
 public interface ClientRepository extends JpaRepository<Client, Long> {
-    @Query("select c from Client c where LOWER(c.fullName) like concat('%', LOWER(:searchNameString), '%')")
+    @Query("select c from Client c " +
+            "where LOWER(c.fullName) like concat('%', LOWER(:searchNameString), '%')")
     List<Client> search(String searchNameString);
 }
