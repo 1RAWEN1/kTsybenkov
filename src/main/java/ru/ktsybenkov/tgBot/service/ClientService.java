@@ -15,11 +15,11 @@ import java.util.List;
 @Service
 @Transactional
 public class ClientService {
-    private ClientOrderRepository clientOrderRepository;
+    private final ClientOrderRepository clientOrderRepository;
 
-    private OrderProductRepository orderProductRepository;
+    private final OrderProductRepository orderProductRepository;
 
-    private ClientRepository clientRepository;
+    private final ClientRepository clientRepository;
 
     public ClientService(ClientOrderRepository clientOrderRepository, OrderProductRepository orderProductRepository
             , ClientRepository clientRepository) {

@@ -12,28 +12,20 @@ import java.util.List;
 @Service
 @Transactional
 public class ProductService {
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
     public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
-    }
-
-    public List<Product> getProductsOfCategory(Long categoryId){
-        return productRepository.findByCategoryId(categoryId);
     }
 
     public List<Product> getMostPopularProducts(Long topLimit){
         return productRepository.findMostPopularProducts(topLimit);
     }
 
-    public List<Product> search(String searchNameString){
-        return productRepository.search(searchNameString);
-    }
-
     public List<Product> search(String searchNameString, Long categoryId){
         if(categoryId != null)
-            return getProductsOfCategory(categoryId);
+            return productRepository.findByCategoryId(categoryId);
         else
-            return search(searchNameString);
+            return productRepository.search(searchNameString);
     }
 }

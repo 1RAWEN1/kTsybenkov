@@ -15,7 +15,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findByCategoryId(Long categoryId);
 
-    @Query("select op.product, sum(op.countProduct) as c from OrderProduct op " +
+    @Query("select op.product, sum(op.countProduct) as c " +
+            "from OrderProduct op " +
             "group by op.product " +
             "order by c desc " +
             "limit :limit")
