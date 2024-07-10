@@ -12,11 +12,11 @@ import java.util.List;
 @Service
 @Transactional
 public class ProductService {
-    @Autowired
     private ProductRepository productRepository;
 
-    @Autowired
-    private OrderProductRepository orderProductRepository;
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
 
     public List<Product> getProductsOfCategory(Long categoryId){
         return productRepository.findByCategoryId(categoryId);

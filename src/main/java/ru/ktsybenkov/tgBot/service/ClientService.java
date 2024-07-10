@@ -15,14 +15,18 @@ import java.util.List;
 @Service
 @Transactional
 public class ClientService {
-    @Autowired
     private ClientOrderRepository clientOrderRepository;
 
-    @Autowired
     private OrderProductRepository orderProductRepository;
 
-    @Autowired
     private ClientRepository clientRepository;
+
+    public ClientService(ClientOrderRepository clientOrderRepository, OrderProductRepository orderProductRepository
+            , ClientRepository clientRepository) {
+        this.clientOrderRepository = clientOrderRepository;
+        this.orderProductRepository = orderProductRepository;
+        this.clientRepository = clientRepository;
+    }
 
     public List<ClientOrder> getClientOrders(Long clientId){
         return clientOrderRepository.findByClientId(clientId);
