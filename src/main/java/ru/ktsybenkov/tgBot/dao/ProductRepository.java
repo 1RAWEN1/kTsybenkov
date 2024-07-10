@@ -9,7 +9,8 @@ import java.util.List;
 
 @RepositoryRestResource(collectionResourceRel = "products", path = "products")
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    @Query("select p from Product p " +
+    @Query("select p " +
+            "from Product p " +
             "where LOWER(p.name) like concat('%', LOWER(:searchNameString), '%')")
     List<Product> search(String searchNameString);
 
