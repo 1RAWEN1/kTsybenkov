@@ -9,10 +9,10 @@ public class OrderProduct {
     @GeneratedValue
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private ClientOrder clientOrder;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Product product;
 
     @Column(nullable = false)
@@ -21,8 +21,7 @@ public class OrderProduct {
     public OrderProduct() {
     }
 
-    public OrderProduct(ClientOrder clientOrder, Product product,
-                        Integer countProduct) {
+    public OrderProduct(ClientOrder clientOrder, Product product, Integer countProduct) {
         this.clientOrder = clientOrder;
         this.product = product;
         this.countProduct = countProduct;
