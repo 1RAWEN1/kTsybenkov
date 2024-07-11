@@ -35,7 +35,7 @@ public class TgBotService {
     private final OrderProductRepository orderProductRepository;
 
     public TgBotService(CategoryService categoryService, ProductService productService, ClientService clientService,
-                        ClientOrderRepository clientOrderRepository, OrderProductRepository orderProductRepository, ConfigurationPropertiesAutoConfiguration configurationPropertiesAutoConfiguration) {
+                        ClientOrderRepository clientOrderRepository, OrderProductRepository orderProductRepository) {
         this.categoryService = categoryService;
         this.productService = productService;
         this.clientService = clientService;
@@ -68,7 +68,6 @@ public class TgBotService {
                 editOrder(client.getId(), callback, chatId);
             }
             else {
-                System.out.println(2);
                 registrationMessage(chatId);
             }
 
@@ -84,13 +83,9 @@ public class TgBotService {
                 bot.execute(new SendMessage(chatId,
                         "Бот готов к работе"));
 
-                List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
-                        .stream()
-                        .map(category -> new KeyboardButton(category.getName())).toList();
-                sendMainMenu(chatId, categories);
+                sendMainMenu(chatId, null);
             }
             else {
-                System.out.println(1);
                 registrationMessage(chatId);
             }
 
@@ -148,21 +143,13 @@ public class TgBotService {
                     bot.execute(new SendMessage(chatId, orderMessage + "\nИтого: " + clientOrder.getTotal() + "р"));
                 }
                 case "В основное меню" -> {
-                    List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
-                            .stream()
-                            .map(category -> new KeyboardButton(category.getName())).toList();
-
-                    sendMainMenu(chatId, categories);
+                    sendMainMenu(chatId, null);
                 }
                 //Если клиент ввел название категории, пробует регистрировать аккаунт или ввел нестандартную команду
                 default -> {
                     Long categoryId = categoryService.getCategoryByName(update.message().text());
                     if (categoryId != null) {
-                        List<KeyboardButton> categories = categoryService.getCategoryByParent(categoryId)
-                                .stream()
-                                .map(category -> new KeyboardButton(category.getName())).toList();
-
-                        sendMainMenu(chatId, categories);
+                        sendMainMenu(chatId, categoryId);
 
                         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
                         for (Product product : productService.search(null, categoryId)) {
@@ -213,10 +200,7 @@ public class TgBotService {
             bot.execute(new SendMessage(chatId,
                     "Информация о клиенте изменена"));
 
-            List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
-                    .stream()
-                    .map(category -> new KeyboardButton(category.getName())).toList();
-            sendMainMenu(chatId, categories);
+            sendMainMenu(chatId, null);
         }
         //Неизвестная команда или ошибка парсинга
         catch (Exception e){
@@ -224,16 +208,12 @@ public class TgBotService {
 
             if(client == null) {
                 registrationMessage(chatId);
-                System.out.println(3);
             }
             else {
                 bot.execute(new SendMessage(chatId,
                         "Я не знаю такой команды."));
 
-                List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
-                        .stream()
-                        .map(category -> new KeyboardButton(category.getName())).toList();
-                sendMainMenu(chatId, categories);
+                sendMainMenu(chatId, null);
             }
         }
     }
@@ -257,7 +237,11 @@ public class TgBotService {
         clientOrderRepository.save(clientOrder);
     }
 
-    private void sendMainMenu(Long chatId, List<KeyboardButton> categories) {
+    private void sendMainMenu(Long chatId, Long parentId) {
+        List<KeyboardButton> categories = categoryService.getCategoryByParent(parentId)
+                .stream()
+                .map(category -> new KeyboardButton(category.getName())).toList();
+
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(categories.toArray(KeyboardButton[]::new));
         markup.resizeKeyboard(true);
         markup.addRow(new KeyboardButton("Информация клиента"),new KeyboardButton("Редактировать информацию клиента"));
