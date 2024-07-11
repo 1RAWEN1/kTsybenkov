@@ -34,7 +34,8 @@ public class TgBotService {
     private final OrderProductRepository orderProductRepository;
 
     public TgBotService(CategoryService categoryService, ProductService productService, ClientService clientService,
-                        ClientOrderRepository clientOrderRepository, OrderProductRepository orderProductRepository, ClientRepository clientRepository) {
+                        ClientOrderRepository clientOrderRepository, OrderProductRepository orderProductRepository,
+                        ClientRepository clientRepository) {
         this.categoryService = categoryService;
         this.productService = productService;
         this.clientService = clientService;
