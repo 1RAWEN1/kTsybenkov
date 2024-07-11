@@ -10,6 +10,7 @@ import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMessage;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration;
 import org.springframework.stereotype.Service;
 import ru.ktsybenkov.tgBot.dao.ClientOrderRepository;
 import ru.ktsybenkov.tgBot.dao.OrderProductRepository;
@@ -34,7 +35,7 @@ public class TgBotService {
     private final OrderProductRepository orderProductRepository;
 
     public TgBotService(CategoryService categoryService, ProductService productService, ClientService clientService,
-                        ClientOrderRepository clientOrderRepository, OrderProductRepository orderProductRepository) {
+                        ClientOrderRepository clientOrderRepository, OrderProductRepository orderProductRepository, ConfigurationPropertiesAutoConfiguration configurationPropertiesAutoConfiguration) {
         this.categoryService = categoryService;
         this.productService = productService;
         this.clientService = clientService;
@@ -56,51 +57,58 @@ public class TgBotService {
     }
 
     private void update(Update update) {
+        Long chatId;
+        //Добавление товара в заказ
         if(update.callbackQuery() != null){
-            Client client = clientService.getClientByExternalId(update.callbackQuery().from().id());
+            chatId = update.callbackQuery().from().id();
+            Client client = clientService.getClientByExternalId(chatId);
 
             if(client != null) {
-                String[] callback = update.callbackQuery().data().split(",");
-                editOrder(client.getId(), callback, update);
+                String[] callback = update.callbackQuery().data().split(":");
+                editOrder(client.getId(), callback, chatId);
             }
             else {
-                registrationMessage(update.callbackQuery().from().id());
+                System.out.println(2);
+                registrationMessage(chatId);
             }
 
             return;
         }
 
+        chatId = update.message().chat().id();
+        //Первое обращение к боту
         if(update.message().text().equals("/start")){
-            Client client = clientService.getClientByExternalId(update.message().chat().id());
+            Client client = clientService.getClientByExternalId(chatId);
 
             if(client != null) {
-                bot.execute(new SendMessage(update.message().chat().id(),
+                bot.execute(new SendMessage(chatId,
                         "Бот готов к работе"));
 
                 List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
                         .stream()
                         .map(category -> new KeyboardButton(category.getName())).toList();
-                defaultMessage(update, categories);
+                sendMainMenu(chatId, categories);
             }
             else {
-                registrationMessage(update.message().chat().id());
+                System.out.println(1);
+                registrationMessage(chatId);
             }
 
             return;
         }
 
-        Client client = clientService.getClientByExternalId(update.message().chat().id());
+        Client client = clientService.getClientByExternalId(chatId);
 
         if(client != null) {
             switch (update.message().text()) {
                 case "Редактировать информацию клиента" -> {
-                    bot.execute(new SendMessage(update.message().chat().id(),
+                    bot.execute(new SendMessage(chatId,
                             "Информация клиента:\n" + client.getFullName() + "," + client.getPhoneNumber() +
                                     "," + client.getAddress()));
 
-                    clientInformationEditMessage(update);
+                    clientInformationEditMessage(chatId);
                 }
-                case "Информация клиента" -> bot.execute(new SendMessage(update.message().chat().id(),
+                case "Информация клиента" -> bot.execute(new SendMessage(chatId,
                         "Имя клиента: " + client.getFullName() + "\nНомер телефона: " + client.getPhoneNumber() +
                                 "\nАдрес: " + client.getAddress() + "\nВнутренний ID: " + client.getId()));
                 case "Оформить заказ" -> {
@@ -112,13 +120,13 @@ public class TgBotService {
 
                         clientOrderRepository.save(clientOrder);
 
-                        bot.execute(new SendMessage(update.message().chat().id(),
+                        bot.execute(new SendMessage(chatId,
                                 "Заказ успешно оформлен. ID: " + clientOrder.getId()));
 
                         newClientOrder(client);
                     }
                     else{
-                        bot.execute(new SendMessage(update.message().chat().id(),
+                        bot.execute(new SendMessage(chatId,
                                 "В заказе пока нет товаров"));
                     }
                 }
@@ -128,25 +136,25 @@ public class TgBotService {
 
                     List<OrderProduct> orderProducts = orderProductRepository
                             .findByClientOrder(clientOrder);
+                    StringBuilder orderMessage = new StringBuilder();
                     for(OrderProduct orderProduct : orderProducts){
                         int productCount = orderProduct.getCountProduct();
-                        bot.execute(new SendMessage(update.message().chat().id(),
-                                orderProduct.getProduct().getName() + " х" + productCount +
-                                " Общая цена: " + (orderProduct.getProduct().getPrice().doubleValue() * productCount)
-                                        + "р"));
+                        orderMessage.append(orderProduct.getProduct().getName()).append(" х")
+                                .append(productCount).append(" Общая цена: ")
+                                .append(orderProduct.getProduct().getPrice().doubleValue() * productCount)
+                                .append("р\n");
                     }
 
-                    bot.execute(new SendMessage(update.message().chat().id(),
-                            "Итого: " + clientOrder.getTotal()
-                                    + "р"));
+                    bot.execute(new SendMessage(chatId, orderMessage + "\nИтого: " + clientOrder.getTotal() + "р"));
                 }
                 case "В основное меню" -> {
                     List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
                             .stream()
                             .map(category -> new KeyboardButton(category.getName())).toList();
 
-                    defaultMessage(update, categories);
+                    sendMainMenu(chatId, categories);
                 }
+                //Если клиент ввел название категории, пробует регистрировать аккаунт или ввел нестандартную команду
                 default -> {
                     Long categoryId = categoryService.getCategoryByName(update.message().text());
                     if (categoryId != null) {
@@ -154,21 +162,19 @@ public class TgBotService {
                                 .stream()
                                 .map(category -> new KeyboardButton(category.getName())).toList();
 
-                        defaultMessage(update, categories);
+                        sendMainMenu(chatId, categories);
 
+                        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
                         for (Product product : productService.search(null, categoryId)) {
-                            InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
                             InlineKeyboardButton button = new
-                                    InlineKeyboardButton("Добавить к заказу")
-                                    .callbackData("a," + product.getId());
+                                    InlineKeyboardButton(product.getName() + ".\nЦена: " + product.getPrice())
+                                    .callbackData("add:" + product.getId());
 
                             markupInline.addRow(button);
-
-                            bot.execute(new SendMessage(update.message().chat().id(),
-                                    "Товар: " + product.getName() + "\nОписание: " +
-                                            product.getDescription() + "\nЦена: " +
-                                            product.getPrice()).replyMarkup(markupInline));
                         }
+
+                        bot.execute(new SendMessage(chatId, update.message().text() + ":")
+                                .replyMarkup(markupInline));
                     }
                     else
                         registration(update, client);
@@ -179,19 +185,18 @@ public class TgBotService {
             registration(update, null);
     }
 
+    //Регистрация нового пользователя или обновление данных аккаунта
     public void registration(Update update, Client client){
-        String fullName;
-        String phoneNumber;
-        String address;
+        Long chatId = update.message().chat().id();
         try{
             String[] parts = update.message().text().split(",");
-
-            fullName = parts[0];
-            phoneNumber = parts[1];
-            address = parts[2];
+            String fullName = parts[0];
+            String phoneNumber = parts[1];
+            String address = parts[2];
+            
             Client newClient = client;
             if(newClient == null) {
-                newClient = new Client(update.message().chat().id(), fullName, phoneNumber, address);
+                newClient = new Client(chatId, fullName, phoneNumber, address);
 
                 clientService.saveClient(newClient);
             }
@@ -205,28 +210,30 @@ public class TgBotService {
 
             newClientOrder(newClient);
 
-            bot.execute(new SendMessage(update.message().chat().id(),
+            bot.execute(new SendMessage(chatId,
                     "Информация о клиенте изменена"));
 
             List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
                     .stream()
                     .map(category -> new KeyboardButton(category.getName())).toList();
-            defaultMessage(update, categories);
+            sendMainMenu(chatId, categories);
         }
+        //Неизвестная команда или ошибка парсинга
         catch (Exception e){
             System.out.println("Неизвестная команда. Ошибка парсинга клиента: " + e.getMessage());
 
             if(client == null) {
-                registrationMessage(update.message().chat().id());
+                registrationMessage(chatId);
+                System.out.println(3);
             }
             else {
-                bot.execute(new SendMessage(update.message().chat().id(),
+                bot.execute(new SendMessage(chatId,
                         "Я не знаю такой команды."));
 
                 List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
                         .stream()
                         .map(category -> new KeyboardButton(category.getName())).toList();
-                defaultMessage(update, categories);
+                sendMainMenu(chatId, categories);
             }
         }
     }
@@ -238,8 +245,8 @@ public class TgBotService {
                         "Без пробелов после запятых"));
     }
 
-    public void clientInformationEditMessage(Update update){
-        bot.execute(new SendMessage(update.message().chat().id(),
+    public void clientInformationEditMessage(Long chatId){
+        bot.execute(new SendMessage(chatId,
                 "Все как и в прошлый раз. Только теперь для редактирования.\n" +
                         "Введи через запятую:\n|Полное Имя,Номер телефона(10 символов),Адрес|\n" +
                         "Без пробелов после запятых"));
@@ -250,17 +257,17 @@ public class TgBotService {
         clientOrderRepository.save(clientOrder);
     }
 
-    private void defaultMessage(Update update, List<KeyboardButton> categories) {
+    private void sendMainMenu(Long chatId, List<KeyboardButton> categories) {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(categories.toArray(KeyboardButton[]::new));
         markup.resizeKeyboard(true);
         markup.addRow(new KeyboardButton("Информация клиента"),new KeyboardButton("Редактировать информацию клиента"));
         markup.addRow(new KeyboardButton("Просмотреть заказ"), new KeyboardButton("Оформить заказ"));
         markup.addRow(new KeyboardButton("В основное меню"));
-        bot.execute(new SendMessage(update.message().chat().id(),
+        bot.execute(new SendMessage(chatId,
                 "Товары").replyMarkup(markup));
     }
 
-    public void editOrder(Long clientId, String[] callback, Update update){
+    public void editOrder(Long clientId, String[] callback, Long chatId){
         Long productId = null;
         try {
             productId = Long.parseLong(callback[1]);
@@ -278,7 +285,7 @@ public class TgBotService {
             InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
             String text = "";
             switch (callback[0]) {
-                case "a" -> {
+                case "add" -> {
                     if (orderProduct == null) {
                         orderProduct = new OrderProduct(clientOrder,
                                 productService.getProductById(productId), 1);
@@ -292,7 +299,7 @@ public class TgBotService {
 
                     InlineKeyboardButton button = new
                             InlineKeyboardButton("Добавить еще 1 к заказу")
-                            .callbackData("a," + orderProduct.getProduct().getId());
+                            .callbackData("add:" + orderProduct.getProduct().getId());
 
                     markupInline.addRow(button);
 
@@ -300,7 +307,7 @@ public class TgBotService {
                 }
             }
 
-            bot.execute(new SendMessage(update.callbackQuery().from().id(),
+            bot.execute(new SendMessage(chatId,
                     text).replyMarkup(markupInline));
         }
     }
