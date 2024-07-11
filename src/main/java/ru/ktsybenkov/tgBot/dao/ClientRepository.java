@@ -13,4 +13,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
             "from Client c " +
             "where LOWER(c.fullName) like concat('%', LOWER(:searchNameString), '%')")
     List<Client> search(String searchNameString);
+
+    Client findByExternalId(Long externalId);
 }

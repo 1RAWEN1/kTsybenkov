@@ -26,4 +26,8 @@ public class ProductService {
         else
             return productRepository.search(searchNameString);
     }
+
+    public Product getProductById(Long id){
+        return productRepository.findById(id).orElseThrow();
+    }
 }
