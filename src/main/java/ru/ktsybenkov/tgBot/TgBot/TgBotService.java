@@ -9,6 +9,7 @@ import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMessage;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.ktsybenkov.tgBot.dao.ClientOrderRepository;
 import ru.ktsybenkov.tgBot.dao.ClientRepository;
@@ -42,10 +43,13 @@ public class TgBotService {
         this.orderProductRepository = orderProductRepository;
     }
 
+    @Value("${telegram.bot.token}")
+    private String botToken;
+
     @PostConstruct
     public void createConnection()
     {
-        bot = new TelegramBot("6733033800:AAG_PEW8TMM_Ext9OLbqsLoY3X5Za8JPKf0");
+        bot = new TelegramBot(botToken);
         bot.setUpdatesListener(updates -> {
             updates.forEach(this::update);
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
@@ -70,6 +74,15 @@ public class TgBotService {
 
         if(client != null) {
             switch (update.message().text()) {
+                case "/start" -> {
+                    bot.execute(new SendMessage(update.message().chat().id(),
+                            "Бот готов к работе"));
+
+                    List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
+                            .stream()
+                            .map(category -> new KeyboardButton(category.getName())).toList();
+                    defaultMessage(update, categories);
+                }
                 case "Редактировать информацию клиента" -> {
                     bot.execute(new SendMessage(update.message().chat().id(),
                             "Информация клиента:\n" + client.getFullName() + "," + client.getPhoneNumber() +
@@ -202,6 +215,9 @@ public class TgBotService {
 
             newClientOrder(newClient);
 
+            bot.execute(new SendMessage(update.message().chat().id(),
+                    "Информация о клиенте изменена"));
+
             List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
                     .stream()
                     .map(category -> new KeyboardButton(category.getName())).toList();
@@ -212,8 +228,15 @@ public class TgBotService {
 
             if(client == null)
                 registrationMessage(update);
-            else
-                clientInformationEditMessage(update);
+            else {
+                bot.execute(new SendMessage(update.message().chat().id(),
+                        "Я не знаю такой команды."));
+
+                List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
+                        .stream()
+                        .map(category -> new KeyboardButton(category.getName())).toList();
+                defaultMessage(update, categories);
+            }
         }
     }
 
