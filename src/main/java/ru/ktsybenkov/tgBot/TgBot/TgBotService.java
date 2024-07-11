@@ -34,8 +34,7 @@ public class TgBotService {
     private final OrderProductRepository orderProductRepository;
 
     public TgBotService(CategoryService categoryService, ProductService productService, ClientService clientService,
-                        ClientOrderRepository clientOrderRepository, OrderProductRepository orderProductRepository,
-                        ClientRepository clientRepository) {
+                        ClientOrderRepository clientOrderRepository, OrderProductRepository orderProductRepository) {
         this.categoryService = categoryService;
         this.productService = productService;
         this.clientService = clientService;
@@ -76,16 +75,11 @@ public class TgBotService {
                             "Информация клиента:\n" + client.getFullName() + "," + client.getPhoneNumber() +
                                     "," + client.getAddress()));
 
-                    bot.execute(new SendMessage(update.message().chat().id(),
-                            "Все как и в прошлый раз. Только теперь для редактирования.\n" +
-                                    "Введи через запятую:\n|Полное Имя,Номер телефона(10 символов),Адрес|\n" +
-                                    "Без пробелов после запятых"));
+                    clientInformationEditMessage(update);
                 }
-                case "Информация клиента" -> {
-                    bot.execute(new SendMessage(update.message().chat().id(),
-                            "Имя клиента: " + client.getFullName() + "\nНомер телефона: " + client.getPhoneNumber() +
-                                    "\nАдрес: " + client.getAddress() + "\nВнутренний ID: " + client.getId()));
-                }
+                case "Информация клиента" -> bot.execute(new SendMessage(update.message().chat().id(),
+                        "Имя клиента: " + client.getFullName() + "\nНомер телефона: " + client.getPhoneNumber() +
+                                "\nАдрес: " + client.getAddress() + "\nВнутренний ID: " + client.getId()));
                 case "Убрать товар из заказа" -> {
                     ClientOrder clientOrder = clientOrderRepository
                             .findNewOrderByClientId(client.getId());
@@ -216,13 +210,23 @@ public class TgBotService {
         catch (Exception e){
             System.out.println("Ошибка парсинга клиента: " + e.getMessage());
 
-            registrationMessage(update);
+            if(client == null)
+                registrationMessage(update);
+            else
+                clientInformationEditMessage(update);
         }
     }
 
     public void registrationMessage(Update update){
         bot.execute(new SendMessage(update.message().chat().id(),
                 "Привет! Я Бот для автоматизации доставки заказов. Вначале нужно зарегистрироваться.\n" +
+                        "Введи через запятую:\n|Полное Имя,Номер телефона(10 символов),Адрес|\n" +
+                        "Без пробелов после запятых"));
+    }
+
+    public void clientInformationEditMessage(Update update){
+        bot.execute(new SendMessage(update.message().chat().id(),
+                "Все как и в прошлый раз. Только теперь для редактирования.\n" +
                         "Введи через запятую:\n|Полное Имя,Номер телефона(10 символов),Адрес|\n" +
                         "Без пробелов после запятых"));
     }
