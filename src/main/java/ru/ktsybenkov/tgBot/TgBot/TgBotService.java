@@ -12,7 +12,6 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.ktsybenkov.tgBot.dao.ClientOrderRepository;
-import ru.ktsybenkov.tgBot.dao.ClientRepository;
 import ru.ktsybenkov.tgBot.dao.OrderProductRepository;
 import ru.ktsybenkov.tgBot.entity.Client;
 import ru.ktsybenkov.tgBot.entity.ClientOrder;
@@ -64,8 +63,28 @@ public class TgBotService {
                 String[] callback = update.callbackQuery().data().split(",");
                 editOrder(client.getId(), callback, update);
             }
-            else
-                registrationMessage(update);
+            else {
+                registrationMessage(update.callbackQuery().from().id());
+            }
+
+            return;
+        }
+
+        if(update.message().text().equals("/start")){
+            Client client = clientService.getClientByExternalId(update.message().chat().id());
+
+            if(client != null) {
+                bot.execute(new SendMessage(update.message().chat().id(),
+                        "Бот готов к работе"));
+
+                List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
+                        .stream()
+                        .map(category -> new KeyboardButton(category.getName())).toList();
+                defaultMessage(update, categories);
+            }
+            else {
+                registrationMessage(update.message().chat().id());
+            }
 
             return;
         }
@@ -74,15 +93,6 @@ public class TgBotService {
 
         if(client != null) {
             switch (update.message().text()) {
-                case "/start" -> {
-                    bot.execute(new SendMessage(update.message().chat().id(),
-                            "Бот готов к работе"));
-
-                    List<KeyboardButton> categories = categoryService.getCategoryByParent(null)
-                            .stream()
-                            .map(category -> new KeyboardButton(category.getName())).toList();
-                    defaultMessage(update, categories);
-                }
                 case "Редактировать информацию клиента" -> {
                     bot.execute(new SendMessage(update.message().chat().id(),
                             "Информация клиента:\n" + client.getFullName() + "," + client.getPhoneNumber() +
@@ -224,10 +234,11 @@ public class TgBotService {
             defaultMessage(update, categories);
         }
         catch (Exception e){
-            System.out.println("Ошибка парсинга клиента: " + e.getMessage());
+            System.out.println("Неизвестная команда. Ошибка парсинга клиента: " + e.getMessage());
 
-            if(client == null)
-                registrationMessage(update);
+            if(client == null) {
+                registrationMessage(update.message().chat().id());
+            }
             else {
                 bot.execute(new SendMessage(update.message().chat().id(),
                         "Я не знаю такой команды."));
@@ -240,8 +251,8 @@ public class TgBotService {
         }
     }
 
-    public void registrationMessage(Update update){
-        bot.execute(new SendMessage(update.message().chat().id(),
+    public void registrationMessage(Long chatId){
+        bot.execute(new SendMessage(chatId,
                 "Привет! Я Бот для автоматизации доставки заказов. Вначале нужно зарегистрироваться.\n" +
                         "Введи через запятую:\n|Полное Имя,Номер телефона(10 символов),Адрес|\n" +
                         "Без пробелов после запятых"));
