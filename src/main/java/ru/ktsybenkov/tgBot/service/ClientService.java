@@ -32,10 +32,18 @@ public class ClientService {
     }
 
     public List<Product> getClientsOrderedProducts(Long clientId){
-        return orderProductRepository.findProductByClientOrderId(clientId);
+        return orderProductRepository.findProductByClientId(clientId);
     }
 
     public List<Client> search(String searchNameString){
         return clientRepository.search(searchNameString);
+    }
+
+    public Client getClientByExternalId(Long id){
+        return clientRepository.findByExternalId(id);
+    }
+
+    public void saveClient(Client client){
+        clientRepository.save(client);
     }
 }
