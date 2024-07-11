@@ -103,26 +103,6 @@ public class TgBotService {
                 case "Информация клиента" -> bot.execute(new SendMessage(update.message().chat().id(),
                         "Имя клиента: " + client.getFullName() + "\nНомер телефона: " + client.getPhoneNumber() +
                                 "\nАдрес: " + client.getAddress() + "\nВнутренний ID: " + client.getId()));
-                case "Убрать товар из заказа" -> {
-                    ClientOrder clientOrder = clientOrderRepository
-                            .findNewOrderByClientId(client.getId());
-
-                    List<Product> orderedProducts = orderProductRepository
-                            .findProductByClientOrderId(clientOrder.getId());
-
-                    for(Product product : orderedProducts) {
-                        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-                        InlineKeyboardButton button = new
-                                InlineKeyboardButton("Убрать х1 ")
-                                .callbackData("d," + product.getId());
-
-                        markupInline.addRow(button);
-
-                        bot.execute(new SendMessage(update.message().chat().id(),
-                                product.getName()).replyMarkup(markupInline));
-
-                    }
-                }
                 case "Оформить заказ" -> {
                     ClientOrder clientOrder = clientOrderRepository
                             .findNewOrderByClientId(client.getId());
@@ -274,8 +254,7 @@ public class TgBotService {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup(categories.toArray(KeyboardButton[]::new));
         markup.resizeKeyboard(true);
         markup.addRow(new KeyboardButton("Информация клиента"),new KeyboardButton("Редактировать информацию клиента"));
-        markup.addRow(new KeyboardButton("Просмотреть заказ"),new KeyboardButton("Убрать товар из заказа"),
-                new KeyboardButton("Оформить заказ"));
+        markup.addRow(new KeyboardButton("Просмотреть заказ"), new KeyboardButton("Оформить заказ"));
         markup.addRow(new KeyboardButton("В основное меню"));
         bot.execute(new SendMessage(update.message().chat().id(),
                 "Товары").replyMarkup(markup));
@@ -318,26 +297,6 @@ public class TgBotService {
                     markupInline.addRow(button);
 
                     text = orderProduct.getProduct().getName() + " успешно добавлен к заказу";
-                }
-                case "d" -> {
-                    orderProduct.setCountProduct(orderProduct.getCountProduct() - 1);
-                    orderProductRepository.save(orderProduct);
-
-                    clientOrder.setTotal(clientOrder.getTotal().subtract(orderProduct.getProduct().getPrice()));
-                    clientOrderRepository.save(clientOrder);
-
-                    if(orderProduct.getCountProduct() == 0){
-                        orderProductRepository.delete(orderProduct);
-                    }
-                    else {
-                        InlineKeyboardButton button = new
-                                InlineKeyboardButton("Убрать еще 1")
-                                .callbackData("d," + orderProduct.getProduct().getId());
-
-                        markupInline.addRow(button);
-                    }
-
-                    text = orderProduct.getProduct().getName() + " успешно удален из заказа";
                 }
             }
 
